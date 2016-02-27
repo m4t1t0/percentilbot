@@ -35,7 +35,7 @@ def main():
             num_orders_krd = get_num_orders(db_krd)
             total = int(num_orders_pct) + int(num_orders_krd)
             message_text = "<b>MADRID:</b> <code>{}</code>\n<b>BERLIN:</b> <code>{}</code>\n<b>TOTAL:</b> <code>{}</code>".format(num_orders_pct, num_orders_krd, total)
-            bot.send_message(message.chat.id, message_text, "HTML")
+            bot.send_html_message(message.chat.id, message_text)
 
     ## /money
     @bot.message_handler(commands=['money'])
@@ -48,19 +48,23 @@ def main():
             money_krd = get_money(db_krd)
             total = float(money_pct) + float(money_krd)
             message_text = "<b>MADRID:</b> <code>{}</code>\n<b>BERLIN:</b> <code>{}</code>\n<b>TOTAL:</b> <code>{}</code>".format(money_pct + "€", money_krd + "€", str(total) + "€")
-            bot.send_message(message.chat.id, message_text, "HTML")
+            bot.send_html_message(message.chat.id, message_text)
 
-    ## filter on a specific message
-    @bot.message_handler(func=lambda message: message.text == "hi")
+    ## filter on a greeting
+    @bot.message_handler(func=lambda message: message.text.lower() == "hi".lower() or message.text.lower() == "hello".lower())
     def command_text_hi(m):
         bot.send_message(m.chat.id, "I'm not allowed to socialize, if you want conversation try to speak with another human!")
+
+    ## filter on a insult
+    @bot.message_handler(func=lambda message: message.text.lower() == "fuck you".lower() or message.text.lower() == "fuck you!".lower())
+    def command_text_hi(m):
+        bot.send_message(m.chat.id, "Fuck you too!")
 
     ## default handler for every other text
     @bot.message_handler(func=lambda message: True, content_types=['text'])
     def command_default(m):
-        # this is the standard reply to a normal message
-        bot.send_message(m.chat.id, "I don't understand \"" + m.text + "\"\nMaybe try the help page at /help")
-    
+        bot.reply_to(m, "I don't understand what you say. Maybe try the /help command")
+
     bot.polling()
 
 def check_auth(message):
