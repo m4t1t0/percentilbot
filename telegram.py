@@ -31,10 +31,12 @@ def main():
             response_no_access(bot, message);
             return
         else:
-            num_orders_pct = get_num_orders(db_pct)
-            num_orders_krd = get_num_orders(db_krd)
-            total = int(num_orders_pct) + int(num_orders_krd)
-            message_text = "<b>MADRID:</b> <code>{}</code>\n<b>BERLIN:</b> <code>{}</code>\n<b>TOTAL:</b> <code>{}</code>".format(num_orders_pct, num_orders_krd, total)
+            num_orders_pct = int(get_num_orders(db_pct))
+            num_orders_krd = int(get_num_orders(db_krd))
+            total = get_total(num_orders_pct, num_orders_krd)
+            
+            message_text = "<b>MADRID:</b> <code>{}</code>\n<b>BERLIN:</b> <code>{}</code>\n<b>TOTAL:</b> <code>{}</code>" \
+                .format(format_result(num_orders_pct), format_result(num_orders_krd), format_result(total))
             bot.send_html_message(message.chat.id, message_text)
 
     ## /money
@@ -44,10 +46,53 @@ def main():
             response_no_access(bot, message);
             return
         else:
-            money_pct = get_money(db_pct)
-            money_krd = get_money(db_krd)
-            total = float(money_pct) + float(money_krd)
-            message_text = "<b>MADRID:</b> <code>{}</code>\n<b>BERLIN:</b> <code>{}</code>\n<b>TOTAL:</b> <code>{}</code>".format(money_pct + "€", money_krd + "€", str(total) + "€")
+            money_pct = float(get_money(db_pct))
+            money_krd = float(get_money(db_krd))
+            total = get_total(money_pct, money_krd)
+            message_text = "<b>MADRID:</b> <code>{}</code>\n<b>BERLIN:</b> <code>{}</code>\n<b>TOTAL:</b> <code>{}</code>" \
+                .format(format_result(money_pct, "€", "{:1.2f}"), format_result(money_krd, "€", "{:1.2f}"), format_result(total, "€", "{:1.2f}"))
+            bot.send_html_message(message.chat.id, message_text)
+
+    ## /wrong_orders
+    @bot.message_handler(commands=['wrong_orders'])
+    def response_wrong_orders(message):
+        if not check_auth(message):
+            response_no_access(bot, message);
+            return
+        else:
+            wrong_orders_pct = int(get_num_wrong_orders(db_pct))
+            wrong_orders_krd = int(get_num_wrong_orders(db_krd))
+            total = get_total(wrong_orders_pct, wrong_orders_krd)
+            message_text = "<b>MADRID:</b> <code>{}</code>\n<b>BERLIN:</b> <code>{}</code>\n<b>TOTAL:</b> <code>{}</code>" \
+                .format(format_result(wrong_orders_pct), format_result(wrong_orders_krd), format_result(total))
+            bot.send_html_message(message.chat.id, message_text)
+
+    ## /buyed_items
+    @bot.message_handler(commands=['buyed_items'])
+    def response_buyed_items(message):
+        if not check_auth(message):
+            response_no_access(bot, message);
+            return
+        else:
+            buyed_items_pct = int(get_buyed_items(db_pct))
+            buyed_items_krd = int(get_buyed_items(db_krd))
+            total = get_total(buyed_items_pct, buyed_items_krd)
+            message_text = "<b>MADRID:</b> <code>{}</code>\n<b>BERLIN:</b> <code>{}</code>\n<b>TOTAL:</b> <code>{}</code>" \
+                .format(format_result(buyed_items_pct), format_result(buyed_items_krd), format_result(total))
+            bot.send_html_message(message.chat.id, message_text)
+
+    ## /buyed_money
+    @bot.message_handler(commands=['buyed_money'])
+    def response_buyed_items(message):
+        if not check_auth(message):
+            response_no_access(bot, message);
+            return
+        else:
+            buyed_money_pct = float(get_buyed_money(db_pct))
+            buyed_money_krd = float(get_buyed_money(db_krd))
+            total = get_total(buyed_money_pct, buyed_money_krd)
+            message_text = "<b>MADRID:</b> <code>{}</code>\n<b>BERLIN:</b> <code>{}</code>\n<b>TOTAL:</b> <code>{}</code>" \
+                .format(format_result(buyed_money_pct, "€", "{:1.2f}"), format_result(buyed_money_krd, "€", "{:1.2f}"), format_result(total, "€", "{:1.2f}"))
             bot.send_html_message(message.chat.id, message_text)
 
     ## filter on a greeting
@@ -77,8 +122,11 @@ def print_help(bot, message):
     commands = {
         'start': 'Get used to the bot',
         'help': 'Gives you information about the available commands',
-        'orders': 'Get the amount of correct orders in both hubs',
-        'money': 'Get the amount of money from correct orders in both hubs'
+        'orders': 'Get the number of correct orders in both hubs',
+        'money': 'Get the amount of money from correct orders in both hubs',
+        'wrong_orders': 'Get the number of wrong orders in both hubs',
+        'buyed_items': 'Get the number of items buyed in both hubs',
+        'buyed_money': 'Get the fiscal price of the items buyed in both hubs'
     }
 
     help_text = "The following commands are available: \n"
@@ -89,31 +137,108 @@ def print_help(bot, message):
 
 def get_num_orders(db):
     today = time.strftime("%Y-%m-%d") + ' 00:00:00'
-    db.query("""
-        SELECT COUNT(*) AS num
-        FROM ps_orders o
-        INNER JOIN PercentilOrder po
-        ON o.id_order = po.id_order
-        WHERE o.date_add >= '{}'
-        AND po.id_order_state IN ({})
-        """.format(today, config.valid_order_states))
-    r = db.store_result()
-    data = r.fetch_row()
-    return data[0][0]
+    try: 
+        db.query("""
+            SELECT COUNT(*) AS num
+            FROM ps_orders o
+            INNER JOIN PercentilOrder po
+            ON o.id_order = po.id_order
+            WHERE o.date_add >= '{}'
+            AND po.id_order_state IN ({})
+            """.format(today, config.valid_order_states))
+        r = db.store_result()
+        data = r.fetch_row()
+        return data[0][0]
+    except:
+        return '-'
 
 def get_money(db):
     today = time.strftime("%Y-%m-%d") + ' 00:00:00'
-    db.query("""
-        SELECT SUM(total_paid_real) AS num
-        FROM ps_orders o
-        INNER JOIN PercentilOrder po
-        ON o.id_order = po.id_order
-        WHERE o.date_add >= '{}'
-        AND po.id_order_state IN ({})
-        """.format(today, config.valid_order_states))
-    r = db.store_result()
-    data = r.fetch_row()
-    return data[0][0]
+    try:
+        db.query("""
+            SELECT SUM(total_paid_real) AS num
+            FROM ps_orders o
+            INNER JOIN PercentilOrder po
+            ON o.id_order = po.id_order
+            WHERE o.date_add >= '{}'
+            AND po.id_order_state IN ({})
+            """.format(today, config.valid_order_states))
+        r = db.store_result()
+        data = r.fetch_row()
+        result = data[0][0]
+        if result is None:
+            return 0
+        else:
+            return result
+    except:
+        return '-'
+
+def get_num_wrong_orders(db):
+    today = time.strftime("%Y-%m-%d") + ' 00:00:00'
+    try:
+        db.query("""
+            SELECT COUNT(*) AS num
+            FROM ps_orders o
+            LEFT JOIN PercentilOrder po
+            ON o.id_order = po.id_order
+            WHERE o.date_add >= '{}'
+            AND (po.id_order IS NULL OR po.id_order_state IN ({}))
+            """.format(today, config.wrong_order_states))
+        r = db.store_result()
+        data = r.fetch_row()
+        return data[0][0]
+    except:
+        return '-'
+
+def get_buyed_items(db):
+    today = time.strftime("%Y-%m-%d") + ' 00:00:00'
+    try:
+        db.query("""
+            SELECT COUNT(*) AS num
+            FROM PercentilProduct pp
+            WHERE pp.processedOn >= '{}'
+            AND pp.status NOT IN ('Lost', 'Discarded', 'Discarded_Hiper')
+            """.format(today))
+        r = db.store_result()
+        data = r.fetch_row()
+        return data[0][0]
+    except:
+        return '-'
+
+def get_buyed_money(db):
+    today = time.strftime("%Y-%m-%d") + ' 00:00:00'
+    try:
+        db.query("""
+            SELECT SUM(pp.fiscal_price) AS num
+            FROM PercentilProduct pp
+            WHERE pp.processedOn >= '{}'
+            AND pp.status NOT IN ('Lost', 'Discarded', 'Discarded_Hiper')
+            """.format(today))
+        r = db.store_result()
+        data = r.fetch_row()
+        result = data[0][0]
+        if result is None:
+            return 0
+        else:
+            return result
+    except:
+        return '-'
+
+def get_total(value1, value2):
+    if value1 == '-' or value2 == '-':
+        return '-'
+    else:
+        return value1 + value2
+
+def format_result(value, prefix=None, _format="{:1.0f}"):
+    if value == "-":
+        return value
+    else:
+        _str = _format.format(value)
+        if prefix is not None:
+            return _str + prefix
+        else:
+            return _str
 
 main()
 
