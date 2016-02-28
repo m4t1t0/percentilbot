@@ -7,7 +7,7 @@ import config
 import custombot
 import _mysql
 
-#pid = "/tmp/percentil_telegram.pid"
+pid = "/tmp/percentil_telegram.pid"
 
 def main():
     bot = custombot.CustomBot(config.token)
@@ -242,5 +242,5 @@ def format_result(value, prefix=None, _format="{:1.0f}"):
 
 main()
 
-#daemon = Daemonize(app="percentil_telegram", pid=pid, action=main)
-#daemon.start()
+daemon = Daemonize(app="percentil_telegram", pid=pid, action=main)
+daemon.start()
