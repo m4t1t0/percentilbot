@@ -46,8 +46,16 @@ def main():
             response_no_access(bot, message);
             return
         else:
-            money_pct = float(get_money(db_pct))
-            money_krd = float(get_money(db_krd))
+            try:
+                money_pct = float(get_money(db_pct))
+            except ValueError:
+                money_pct = '-'
+
+            try:
+                money_krd = float(get_money(db_krd))
+            except ValueError:
+                money_pct = '-'
+
             total = get_total(money_pct, money_krd)
             message_text = "<b>MADRID:</b> <code>{}</code>\n<b>BERLIN:</b> <code>{}</code>\n<b>TOTAL:</b> <code>{}</code>" \
                 .format(format_result(money_pct, "€", "{:1.2f}"), format_result(money_krd, "€", "{:1.2f}"), format_result(total, "€", "{:1.2f}"))
@@ -60,8 +68,16 @@ def main():
             response_no_access(bot, message);
             return
         else:
-            wrong_orders_pct = int(get_num_wrong_orders(db_pct))
-            wrong_orders_krd = int(get_num_wrong_orders(db_krd))
+            try:
+                wrong_orders_pct = int(get_num_wrong_orders(db_pct))
+            except ValueError:
+                wrong_orders_pct = '-'
+
+            try:
+                wrong_orders_krd = int(get_num_wrong_orders(db_krd))
+            except ValueError:
+                wrong_orders_krd = '-'
+
             total = get_total(wrong_orders_pct, wrong_orders_krd)
             message_text = "<b>MADRID:</b> <code>{}</code>\n<b>BERLIN:</b> <code>{}</code>\n<b>TOTAL:</b> <code>{}</code>" \
                 .format(format_result(wrong_orders_pct), format_result(wrong_orders_krd), format_result(total))
@@ -74,8 +90,16 @@ def main():
             response_no_access(bot, message);
             return
         else:
-            buyed_items_pct = int(get_buyed_items(db_pct))
-            buyed_items_krd = int(get_buyed_items(db_krd))
+            try:
+                buyed_items_pct = int(get_buyed_items(db_pct))
+            except ValueError:
+                buyed_items_pct = '-'
+
+            try:
+                buyed_items_krd = int(get_buyed_items(db_krd))
+            except ValueError:
+                buyed_items_krd = '-'
+
             total = get_total(buyed_items_pct, buyed_items_krd)
             message_text = "<b>MADRID:</b> <code>{}</code>\n<b>BERLIN:</b> <code>{}</code>\n<b>TOTAL:</b> <code>{}</code>" \
                 .format(format_result(buyed_items_pct), format_result(buyed_items_krd), format_result(total))
@@ -88,8 +112,16 @@ def main():
             response_no_access(bot, message);
             return
         else:
-            buyed_money_pct = float(get_buyed_money(db_pct))
-            buyed_money_krd = float(get_buyed_money(db_krd))
+            try:
+                buyed_money_pct = float(get_buyed_money(db_pct))
+            except ValueError:
+                buyed_money_pct = '-'
+
+            try:
+                buyed_money_krd = float(get_buyed_money(db_krd))
+            except ValueError:
+                buyed_money_krd = '-'
+
             total = get_total(buyed_money_pct, buyed_money_krd)
             message_text = "<b>MADRID:</b> <code>{}</code>\n<b>BERLIN:</b> <code>{}</code>\n<b>TOTAL:</b> <code>{}</code>" \
                 .format(format_result(buyed_money_pct, "€", "{:1.2f}"), format_result(buyed_money_krd, "€", "{:1.2f}"), format_result(total, "€", "{:1.2f}"))
