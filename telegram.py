@@ -31,8 +31,16 @@ def main():
             response_no_access(bot, message);
             return
         else:
-            num_orders_pct = int(get_num_orders(db_pct))
-            num_orders_krd = int(get_num_orders(db_krd))
+            try:
+                num_orders_pct = int(get_num_orders(db_pct))
+            except ValueError:
+                num_orders_pct = '-'
+
+            try:
+                num_orders_krd = int(get_num_orders(db_krd))
+            except ValueError:
+                num_orders_krd = '-'
+
             total = get_total(num_orders_pct, num_orders_krd)
             
             message_text = "<b>MADRID:</b> <code>{}</code>\n<b>BERLIN:</b> <code>{}</code>\n<b>TOTAL:</b> <code>{}</code>" \
@@ -54,7 +62,7 @@ def main():
             try:
                 money_krd = float(get_money(db_krd))
             except ValueError:
-                money_pct = '-'
+                money_krd = '-'
 
             total = get_total(money_pct, money_krd)
             message_text = "<b>MADRID:</b> <code>{}</code>\n<b>BERLIN:</b> <code>{}</code>\n<b>TOTAL:</b> <code>{}</code>" \
