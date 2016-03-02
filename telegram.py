@@ -23,7 +23,7 @@ def main():
             return
         else:
         	print_help(bot, message)
-    
+
     ## /orders
     @bot.message_handler(commands=['orders'])
     def response_orders(message):
@@ -42,7 +42,7 @@ def main():
                 num_orders_krd = '-'
 
             total = get_total(num_orders_pct, num_orders_krd)
-            
+
             message_text = "<b>MADRID:</b> <code>{}</code>\n<b>BERLIN:</b> <code>{}</code>\n<b>TOTAL:</b> <code>{}</code>" \
                 .format(format_result(num_orders_pct), format_result(num_orders_krd), format_result(total))
             bot.send_html_message(message.chat.id, message_text)
@@ -66,7 +66,7 @@ def main():
 
             total = get_total(money_pct, money_krd)
             message_text = "<b>MADRID:</b> <code>{}</code>\n<b>BERLIN:</b> <code>{}</code>\n<b>TOTAL:</b> <code>{}</code>" \
-                .format(format_result(money_pct, "€", "{:1.2f}"), format_result(money_krd, "€", "{:1.2f}"), format_result(total, "€", "{:1.2f}"))
+                .format(format_result(money_pct, u"\u20AC", "{:1.2f}"), format_result(money_krd, u"\u20AC", "{:1.2f}"), format_result(total, u"\u20AC", "{:1.2f}"))
             bot.send_html_message(message.chat.id, message_text)
 
     ## /wrong_orders
@@ -132,7 +132,7 @@ def main():
 
             total = get_total(buyed_money_pct, buyed_money_krd)
             message_text = "<b>MADRID:</b> <code>{}</code>\n<b>BERLIN:</b> <code>{}</code>\n<b>TOTAL:</b> <code>{}</code>" \
-                .format(format_result(buyed_money_pct, "€", "{:1.2f}"), format_result(buyed_money_krd, "€", "{:1.2f}"), format_result(total, "€", "{:1.2f}"))
+                .format(format_result(buyed_money_pct, u"\u20AC", "{:1.2f}"), format_result(buyed_money_krd, u"\u20AC", "{:1.2f}"), format_result(total, u"\u20AC", "{:1.2f}"))
             bot.send_html_message(message.chat.id, message_text)
 
     ## filter on a greeting
@@ -177,7 +177,7 @@ def print_help(bot, message):
 
 def get_num_orders(db):
     today = time.strftime("%Y-%m-%d") + ' 00:00:00'
-    try: 
+    try:
         db.query("""
             SELECT COUNT(*) AS num
             FROM ps_orders o
