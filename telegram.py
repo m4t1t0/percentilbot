@@ -91,48 +91,48 @@ def main():
                 .format(format_result(wrong_orders_pct), format_result(wrong_orders_krd), format_result(total))
             bot.send_html_message(message.chat.id, message_text)
 
-    ## /buyed_items
-    @bot.message_handler(commands=['buyed_items'])
-    def response_buyed_items(message):
+    ## /bought_items
+    @bot.message_handler(commands=['bought_items'])
+    def response_bought_items(message):
         if not check_auth(message):
             response_no_access(bot, message);
             return
         else:
             try:
-                buyed_items_pct = int(get_buyed_items(db_pct))
+                bought_items_pct = int(get_bought_items(db_pct))
             except ValueError:
-                buyed_items_pct = '-'
+                bought_items_pct = '-'
 
             try:
-                buyed_items_krd = int(get_buyed_items(db_krd))
+                bought_items_krd = int(get_bought_items(db_krd))
             except ValueError:
-                buyed_items_krd = '-'
+                bought_items_krd = '-'
 
-            total = get_total(buyed_items_pct, buyed_items_krd)
+            total = get_total(bought_items_pct, bought_items_krd)
             message_text = "<b>MADRID:</b> <code>{}</code>\n<b>BERLIN:</b> <code>{}</code>\n<b>TOTAL:</b> <code>{}</code>" \
-                .format(format_result(buyed_items_pct), format_result(buyed_items_krd), format_result(total))
+                .format(format_result(bought_items_pct), format_result(bought_items_krd), format_result(total))
             bot.send_html_message(message.chat.id, message_text)
 
-    ## /buyed_money
-    @bot.message_handler(commands=['buyed_money'])
-    def response_buyed_items(message):
+    ## /bought_money
+    @bot.message_handler(commands=['bought_money'])
+    def response_bought_items(message):
         if not check_auth(message):
             response_no_access(bot, message);
             return
         else:
             try:
-                buyed_money_pct = float(get_buyed_money(db_pct))
+                bought_money_pct = float(get_bought_money(db_pct))
             except ValueError:
-                buyed_money_pct = '-'
+                bought_money_pct = '-'
 
             try:
-                buyed_money_krd = float(get_buyed_money(db_krd))
+                bought_money_krd = float(get_bought_money(db_krd))
             except ValueError:
-                buyed_money_krd = '-'
+                bought_money_krd = '-'
 
-            total = get_total(buyed_money_pct, buyed_money_krd)
+            total = get_total(bought_money_pct, bought_money_krd)
             message_text = "<b>MADRID:</b> <code>{}</code>\n<b>BERLIN:</b> <code>{}</code>\n<b>TOTAL:</b> <code>{}</code>" \
-                .format(format_result(buyed_money_pct, u"\u20AC", "{:1.2f}"), format_result(buyed_money_krd, u"\u20AC", "{:1.2f}"), format_result(total, u"\u20AC", "{:1.2f}"))
+                .format(format_result(bought_money_pct, u"\u20AC", "{:1.2f}"), format_result(bought_money_krd, u"\u20AC", "{:1.2f}"), format_result(total, u"\u20AC", "{:1.2f}"))
             bot.send_html_message(message.chat.id, message_text)
 
     ## filter on a greeting
@@ -165,8 +165,8 @@ def print_help(bot, message):
         'orders': 'Get the number of correct orders in both hubs',
         'money': 'Get the amount of money from correct orders in both hubs',
         'wrong_orders': 'Get the number of wrong orders in both hubs',
-        'buyed_items': 'Get the number of items buyed in both hubs',
-        'buyed_money': 'Get the fiscal price of the items buyed in both hubs'
+        'bought_items': 'Get the number of items bought in both hubs',
+        'bought_money': 'Get the fiscal price of the items bought in both hubs'
     }
 
     help_text = "The following commands are available: \n"
@@ -230,7 +230,7 @@ def get_num_wrong_orders(db):
     except:
         return '-'
 
-def get_buyed_items(db):
+def get_bought_items(db):
     today = time.strftime("%Y-%m-%d") + ' 00:00:00'
     try:
         db.query("""
@@ -245,7 +245,7 @@ def get_buyed_items(db):
     except:
         return '-'
 
-def get_buyed_money(db):
+def get_bought_money(db):
     today = time.strftime("%Y-%m-%d") + ' 00:00:00'
     try:
         db.query("""
