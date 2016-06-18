@@ -42,6 +42,8 @@ def main():
     bot = custombot.CustomBot(config.token)
     manager = query_manager.Manager()
 
+    initialize()
+
     ## /start, /help
     @bot.message_handler(commands=['start', 'help'])
     def response_welcome(message):
@@ -49,9 +51,6 @@ def main():
             response_no_access(bot, message);
             return
         else:
-            uid = message.chat.id
-            step = step_manager.UserStep(uid)
-            user_steps[uid] = step
             print_help(bot, message)
 
     ## /help
@@ -135,7 +134,7 @@ def main():
                 selected_hub = user_steps[uid].get_response(1)
                 selected_date = user_steps[uid].get_response(2)
                 data = manager.get_orders_data(hubs[selected_hub], selected_grouping, selected_date)
-                header = [hubs[selected_hub], str(selected_date), message.text]
+                header = [hubs[selected_hub], u"\u2021", str(selected_date), u"\u2021", message.text]
                 message_text = format_message_grouped_data(data, header, default_grouped_data)
                 bot.send_html_message(message.chat.id, message_text)
 
@@ -157,16 +156,13 @@ def main():
 
     bot.polling()
 
+def initialize():
+    for uid in config.auth_users:
+        step = step_manager.UserStep(uid)
+        user_steps[uid] = step
+
 def check_auth(message):
-    auth = message.from_user.id in config.auth_users
-    if auth == True:
-        uid = message.chat.id
-        if uid not in user_steps:
-            step = step_manager.UserStep(uid)
-            user_steps[uid] = step
-        return True
-    else:
-        return False
+    return message.from_user.id in config.auth_users
         
 def response_no_access(bot, message):
     bot.send_message(message.chat.id, "Access denied! try to contact tech manager with id: {}".format(message.from_user.id))
