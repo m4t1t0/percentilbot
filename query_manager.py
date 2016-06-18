@@ -1,14 +1,25 @@
 import time
+import collections
 import config
 
 class Manager():
 
-    def get_orders_data(self, hub, grouping, time_start, time_end):
+    def get_orders_data(self, hub, grouping, date_text):
         result = {}
+        time_start = str(date_text) + ' 00:00:00'
+        time_end = str(date_text) + ' 23:59:59'
         sql = getattr(globals()['Manager'](), 'sql_' + grouping)()
         data = hub['db'].run_query(sql.format(time_start, time_end, config.valid_order_states))
 
         return self.totalize(data, ['num', 'money'])
+
+    def get_orders_available_grouping(self):
+        grouping = collections.OrderedDict()
+        grouping['by cloth type'] = 'orders_by_clothes_subtype'
+        grouping['by site'] = 'orders_by_site'
+        grouping['by payment method'] = 'orders_by_payment_method'
+
+        return grouping
 
     def totalize(self, data, keys):
         total = {}
@@ -27,16 +38,45 @@ class Manager():
 
     def sql_orders_by_clothes_subtype(self):
         return """
-            SELECT po.clothes_subtype AS subtype, 
+            SELECT po.clothes_subtype AS grouping_type, 
             COUNT(*) AS num, sum(total_paid_real) as money
             FROM ps_orders o
-            INNER JOIN PercentilOrder po
-            ON o.id_order = po.id_order
+            INNER JOIN PercentilOrder po ON o.id_order = po.id_order
             WHERE o.date_add >= '{}'
             AND o.date_add <= '{}'
             AND po.id_order_state IN ({})
             GROUP BY po.clothes_subtype
             ORDER BY clothes_subtype ASC
+            """
+
+    def sql_orders_by_site(self):
+        return """
+            SELECT w.shortName AS grouping_type, 
+            COUNT(*) AS num, sum(total_paid_real) as money
+            FROM ps_orders o
+            INNER JOIN PercentilOrder po ON o.id_order = po.id_order
+            INNER JOIN ps_customer c ON c.id_customer = o.id_customer
+            INNER JOIN customer_extra_info cei ON cei.id_customer = c.id_customer
+            INNER JOIN Websites w on w.id_website = cei.id_site
+            WHERE o.date_add >= '{}'
+            AND o.date_add <= '{}'
+            AND po.id_order_state IN ({})
+            GROUP BY cei.id_site
+            ORDER BY cei.id_site ASC
+            """
+
+    def sql_orders_by_payment_method(self):
+        return """
+            SELECT IF(pm.shortName IS NULL, 'W', pm.shortName) AS grouping_type, 
+            COUNT(*) AS num, sum(total_paid_real) as money
+            FROM ps_orders o
+            INNER JOIN PercentilOrder po ON o.id_order = po.id_order
+            LEFT JOIN PaymentMethods pm ON pm.tagName = o.module
+            WHERE o.date_add >= '{}'
+            AND o.date_add <= '{}'
+            AND po.id_order_state IN ({})
+            GROUP BY o.module
+            ORDER BY pm.id_paymentMethod ASC
             """
 
     # def get_purchases_data(self):
