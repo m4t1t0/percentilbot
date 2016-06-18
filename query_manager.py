@@ -21,6 +21,22 @@ class Manager():
 
         return grouping
 
+    def get_purchases_data(self, hub, grouping, date_text):
+        result = {}
+        time_start = str(date_text) + ' 00:00:00'
+        time_end = str(date_text) + ' 23:59:59'
+        sql = getattr(globals()['Manager'](), 'sql_' + grouping)()
+        data = hub['db'].run_query(sql.format(time_start, time_end))
+
+        return self.totalize(data, ['num', 'money'])
+
+    def get_purchases_available_grouping(self):
+        grouping = collections.OrderedDict()
+        grouping['by cloth type'] = 'purchases_by_cloth_type'
+        grouping['by site'] = 'purchases_by_site'
+
+        return grouping
+
     def totalize(self, data, keys):
         total = {}
         for key in keys:
@@ -79,37 +95,34 @@ class Manager():
             ORDER BY pm.id_paymentMethod ASC
             """
 
-    # def get_purchases_data(self):
-    #     result = {}
+    def sql_purchases_by_cloth_type(self):
+        return """
+            SELECT IF(pp.id_subproductType IN (1, 2, 3), 'K', 'W') AS grouping_type,
+            COUNT(*) AS num, SUM(pp.fiscal_price) AS money
+            FROM PercentilProduct pp
+            WHERE pp.processedOn >= '{}'
+            AND pp.processedOn <= '{}'
+            AND pp.status NOT IN ('Lost', 'Discarded', 'Discarded_Hiper')
+            GROUP BY grouping_type
+            ORDER BY grouping_type ASC
+            """
 
-    #     for hub in self.hubs:
-    #         #time_start = time.strftime("%Y-%m-%d") + ' 00:00:00'
-    #         #time_end = time.strftime("%Y-%m-%d") + ' 23:59:59'
-    #         time_start = '2016-06-03 00:00:00'
-    #         time_end = '2016-06-03 23:59:59'
-    #         sql = """
-    #             SELECT IF(pp.id_subproductType IN (1, 2, 3), 'K', 'W') AS subtype, COUNT(*) AS num, SUM(pp.fiscal_price) AS money
-    #             FROM PercentilProduct pp
-    #             WHERE pp.processedOn >= '{}'
-    #             AND pp.processedOn <= '{}'
-    #             AND pp.status NOT IN ('Lost', 'Discarded', 'Discarded_Hiper')
-    #             GROUP BY subtype
-    #             """.format(time_start, time_end)
-        
-    #         data = hub['db'].run_query(sql)
-    #         if data == None:
-    #             subtotal = {'num': '-', 'money': '-'}
-    #         else:
-    #             num = money = 0
-    #             for value in data:
-    #                 num += value['num']
-    #                 money += value['money']
-
-    #             subtotal = {'num': num, 'money': money}
-
-    #         result[hub['name']] = {'data': data, 'subtotal': subtotal}
-
-    #     return result
+    def sql_purchases_by_site(self):
+        return """
+            SELECT w.shortName AS grouping_type,
+            COUNT(*) AS num, SUM(pp.fiscal_price) AS money
+            FROM PercentilProduct pp
+            INNER JOIN bag b ON pp.id_bag = b.id_bag
+            INNER JOIN bag_request br ON b.id_bag_request = br.id_bag_request
+            INNER JOIN ps_customer c ON c.id_customer = br.id_customer
+            INNER JOIN customer_extra_info cei ON c.id_customer = cei.id_customer
+            INNER JOIN Websites w on w.id_website = cei.id_site
+            WHERE pp.processedOn >= '{}'
+            AND pp.processedOn <= '{}'
+            AND pp.status NOT IN ('Lost', 'Discarded', 'Discarded_Hiper')
+            GROUP BY cei.id_site
+            ORDER BY cei.id_site ASC
+            """
 
     # def get_num_wrong_orders(db):
     #     today = time.strftime("%Y-%m-%d") + ' 00:00:00'

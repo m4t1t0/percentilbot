@@ -91,7 +91,6 @@ def main():
                 markup = bot.reply_markup(['today', 'yesterday'])
                 bot.send_message(uid, 'Please choose date', reply_markup=markup)
                 user_steps[uid].set_step(2)
-                user_steps[uid].set_command('orders')
                 user_steps[uid].save_response(1, selected_hub)
 
     ## /orders step 2
@@ -111,7 +110,6 @@ def main():
                 markup = bot.reply_markup(manager.get_orders_available_grouping())
                 bot.send_message(uid, 'Please choose grouping', reply_markup=markup)
                 user_steps[uid].set_step(3)
-                user_steps[uid].set_command('orders')
                 user_steps[uid].save_response(2, selected_date)
 
     ## /orders step 3
@@ -137,6 +135,7 @@ def main():
                 header = [hubs[selected_hub], u"\u2021", str(selected_date), u"\u2021", message.text]
                 message_text = format_message_grouped_data(data, header, default_grouped_data)
                 bot.send_html_message(message.chat.id, message_text)
+                user_steps[uid].reset()
 
     ## /purchases
     @bot.message_handler(commands=['purchases', 'p'])
@@ -145,9 +144,73 @@ def main():
             response_no_access(bot, message);
             return
         else:
-            data = manager.get_purchases_data()
-            message_text = format_message_grouped_data(data, default_grouped_data)
-            bot.send_html_message(message.chat.id, message_text)
+            uid = message.chat.id
+            markup = bot.reply_markup(hubs)
+            bot.send_message(uid, 'Please choose hub', reply_markup=markup)
+            user_steps[uid].set_step(1)
+            user_steps[uid].set_command('purchases')
+
+    ## /purchases step 1
+    @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 1
+        and user_steps[message.chat.id].get_command() == 'purchases')
+    def response_purchases_step_1(message):
+        if not check_auth(message):
+            response_no_access(bot, message);
+            return
+        else:
+            selected_hub = message.text
+            if selected_hub not in hubs:
+                bot.send_html_message(message.chat.id, selected_hub + ' is not a valid hub')
+            else:
+                uid = message.chat.id
+                markup = bot.reply_markup(['today', 'yesterday'])
+                bot.send_message(uid, 'Please choose date', reply_markup=markup)
+                user_steps[uid].set_step(2)
+                user_steps[uid].save_response(1, selected_hub)
+
+    ## /purchases step 2
+    @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 2
+        and user_steps[message.chat.id].get_command() == 'purchases')
+    def response_purchases_step_2(message):
+        if not check_auth(message):
+            response_no_access(bot, message);
+            return
+        else:
+            selected_date = validate_date(message.text)
+
+            if not selected_date:
+                bot.send_html_message(message.chat.id, 'Wrong date, correct format: YYYY-MM-DD')
+            else:
+                uid = message.chat.id
+                markup = bot.reply_markup(manager.get_purchases_available_grouping())
+                bot.send_message(uid, 'Please choose grouping', reply_markup=markup)
+                user_steps[uid].set_step(3)
+                user_steps[uid].save_response(2, selected_date)
+
+    ## /purchases step 3
+    @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 3
+        and user_steps[message.chat.id].get_command() == 'purchases')
+    def response_purchases_step_3(message):
+        if not check_auth(message):
+            response_no_access(bot, message);
+            return
+        else:
+            selected_grouping = validate_grouping(manager, user_steps[message.chat.id].get_command(), message.text)
+
+            if not selected_grouping:
+                bot.send_html_message(message.chat.id, 'Wrong grouping method')
+            else:
+                uid = message.chat.id
+                markup = bot.hide_markup()
+                bot.send_message(uid, selected_grouping, reply_markup=markup)
+
+                selected_hub = user_steps[uid].get_response(1)
+                selected_date = user_steps[uid].get_response(2)
+                data = manager.get_purchases_data(hubs[selected_hub], selected_grouping, selected_date)
+                header = [hubs[selected_hub], u"\u2021", str(selected_date), u"\u2021", message.text]
+                message_text = format_message_grouped_data(data, header, default_grouped_data)
+                bot.send_html_message(message.chat.id, message_text)
+                user_steps[uid].reset()
 
     ## default handler for every other text
     @bot.message_handler(func=lambda message: True, content_types=['text'])
@@ -232,12 +295,16 @@ def validate_date(text_date):
         return None
 
 def validate_grouping(manager, type, grouping):
-    if (type == 'orders'):
+    available = []
+    if type == 'orders':
         available = manager.get_orders_available_grouping()
-        if grouping not in available:
-            return None
-        else:
-            return available[grouping]
+    if type == 'purchases':
+        available = manager.get_purchases_available_grouping()
+    
+    if grouping not in available:
+        return None
+    else:
+        return available[grouping]
 
 main()
 
