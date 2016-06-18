@@ -123,20 +123,3 @@ class Manager():
             GROUP BY cei.id_site
             ORDER BY cei.id_site ASC
             """
-
-    # def get_num_wrong_orders(db):
-    #     today = time.strftime("%Y-%m-%d") + ' 00:00:00'
-    #     try:
-    #         db.query("""
-    #             SELECT COUNT(*) AS num
-    #             FROM ps_orders o
-    #             LEFT JOIN PercentilOrder po
-    #             ON o.id_order = po.id_order
-    #             WHERE o.date_add >= '{}'
-    #             AND (po.id_order IS NULL OR po.id_order_state IN ({}))
-    #             """.format(today, config.wrong_order_states))
-    #         r = db.store_result()
-    #         data = r.fetch_row()
-    #         return data[0][0]
-    #     except:
-    #         return '-'
