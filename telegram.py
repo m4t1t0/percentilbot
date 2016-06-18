@@ -11,6 +11,7 @@ import datetime
 from dateutil.parser import parse
 import collections
 import query_manager
+from query_manager import Manager
 import step_manager
 
 pid = "/tmp/percentil_telegram.pid"
@@ -65,81 +66,50 @@ def main():
     ## /orders
     @bot.message_handler(commands=['orders', 'o'])
     def response_orders(message):
-        if not check_auth(message):
-            response_no_access(bot, message);
-            return
-        else:
-            uid = message.chat.id
-            markup = bot.reply_markup(hubs)
-            bot.send_message(uid, 'Please choose hub', reply_markup=markup)
-            user_steps[uid].set_step(1)
-            user_steps[uid].set_command('orders')
+        response_step_0(message, 'orders')
 
     ## /orders step 1
     @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 1
         and user_steps[message.chat.id].get_command() == 'orders')
     def response_orders_step_1(message):
-        if not check_auth(message):
-            response_no_access(bot, message);
-            return
-        else:
-            selected_hub = message.text
-            if selected_hub not in hubs:
-                bot.send_html_message(message.chat.id, selected_hub + ' is not a valid hub')
-            else:
-                uid = message.chat.id
-                markup = bot.reply_markup(['today', 'yesterday'])
-                bot.send_message(uid, 'Please choose date', reply_markup=markup)
-                user_steps[uid].set_step(2)
-                user_steps[uid].save_response(1, selected_hub)
+        response_step_1(message, 'orders')
 
     ## /orders step 2
     @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 2
         and user_steps[message.chat.id].get_command() == 'orders')
     def response_orders_step_2(message):
-        if not check_auth(message):
-            response_no_access(bot, message);
-            return
-        else:
-            selected_date = validate_date(message.text)
-
-            if not selected_date:
-                bot.send_html_message(message.chat.id, 'Wrong date, correct format: YYYY-MM-DD')
-            else:
-                uid = message.chat.id
-                markup = bot.reply_markup(manager.get_orders_available_grouping())
-                bot.send_message(uid, 'Please choose grouping', reply_markup=markup)
-                user_steps[uid].set_step(3)
-                user_steps[uid].save_response(2, selected_date)
+        response_step_2(message, 'orders')
 
     ## /orders step 3
     @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 3
         and user_steps[message.chat.id].get_command() == 'orders')
     def response_orders_step_3(message):
-        if not check_auth(message):
-            response_no_access(bot, message);
-            return
-        else:
-            selected_grouping = validate_grouping(manager, user_steps[message.chat.id].get_command(), message.text)
-
-            if not selected_grouping:
-                bot.send_html_message(message.chat.id, 'Wrong grouping method')
-            else:
-                uid = message.chat.id
-                markup = bot.hide_markup()
-                bot.send_message(uid, selected_grouping, reply_markup=markup)
-
-                selected_hub = user_steps[uid].get_response(1)
-                selected_date = user_steps[uid].get_response(2)
-                data = manager.get_orders_data(hubs[selected_hub], selected_grouping, selected_date)
-                header = [hubs[selected_hub], u"\u2021", str(selected_date), u"\u2021", message.text]
-                message_text = format_message_grouped_data(data, header, default_grouped_data)
-                bot.send_html_message(message.chat.id, message_text)
-                user_steps[uid].reset()
+        response_step_3(message, 'orders')
 
     ## /purchases
     @bot.message_handler(commands=['purchases', 'p'])
-    def response_bought_items(message):
+    def response_purchases(message):
+        response_step_0(message, 'purchases')
+
+    ## /purchases step 1
+    @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 1
+        and user_steps[message.chat.id].get_command() == 'purchases')
+    def response_purchases_step_1(message):
+        response_step_1(message, 'purchases')
+
+    ## /purchases step 2
+    @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 2
+        and user_steps[message.chat.id].get_command() == 'purchases')
+    def response_purchases_step_2(message):
+        response_step_2(message, 'purchases')
+
+    ## /purchases step 3
+    @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 3
+        and user_steps[message.chat.id].get_command() == 'purchases')
+    def response_purchases_step_3(message):
+        response_step_3(message, 'purchases')
+
+    def response_step_0(message, command):
         if not check_auth(message):
             response_no_access(bot, message);
             return
@@ -148,12 +118,9 @@ def main():
             markup = bot.reply_markup(hubs)
             bot.send_message(uid, 'Please choose hub', reply_markup=markup)
             user_steps[uid].set_step(1)
-            user_steps[uid].set_command('purchases')
+            user_steps[uid].set_command(command)
 
-    ## /purchases step 1
-    @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 1
-        and user_steps[message.chat.id].get_command() == 'purchases')
-    def response_purchases_step_1(message):
+    def response_step_1(message, command):
         if not check_auth(message):
             response_no_access(bot, message);
             return
@@ -168,10 +135,7 @@ def main():
                 user_steps[uid].set_step(2)
                 user_steps[uid].save_response(1, selected_hub)
 
-    ## /purchases step 2
-    @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 2
-        and user_steps[message.chat.id].get_command() == 'purchases')
-    def response_purchases_step_2(message):
+    def response_step_2(message, command):
         if not check_auth(message):
             response_no_access(bot, message);
             return
@@ -182,15 +146,13 @@ def main():
                 bot.send_html_message(message.chat.id, 'Wrong date, correct format: YYYY-MM-DD')
             else:
                 uid = message.chat.id
-                markup = bot.reply_markup(manager.get_purchases_available_grouping())
+                available_grouping = getattr(globals()['Manager'](), 'get_' + command + '_available_grouping')()
+                markup = bot.reply_markup(available_grouping)
                 bot.send_message(uid, 'Please choose grouping', reply_markup=markup)
                 user_steps[uid].set_step(3)
                 user_steps[uid].save_response(2, selected_date)
 
-    ## /purchases step 3
-    @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 3
-        and user_steps[message.chat.id].get_command() == 'purchases')
-    def response_purchases_step_3(message):
+    def response_step_3(message, command):
         if not check_auth(message):
             response_no_access(bot, message);
             return
@@ -206,7 +168,7 @@ def main():
 
                 selected_hub = user_steps[uid].get_response(1)
                 selected_date = user_steps[uid].get_response(2)
-                data = manager.get_purchases_data(hubs[selected_hub], selected_grouping, selected_date)
+                data = getattr(globals()['Manager'](), 'get_' + command + '_data')(hubs[selected_hub], selected_grouping, selected_date)
                 header = [hubs[selected_hub], u"\u2021", str(selected_date), u"\u2021", message.text]
                 message_text = format_message_grouped_data(data, header, default_grouped_data)
                 bot.send_html_message(message.chat.id, message_text)
