@@ -10,7 +10,6 @@ import time
 import datetime
 from dateutil.parser import parse
 import collections
-import query_manager
 from query_manager import Manager
 import step_manager
 
@@ -22,26 +21,11 @@ hubs['madrid'] = {'name': 'Madrid', 'db': db.Db(host=config.mad_db_host, user=co
 hubs['berlin'] = {'name': 'Berlín', 'db': db.Db(host=config.ber_db_host, user=config.ber_db_user, 
     passwd=config.ber_db_pass, dbname=config.ber_db_name)}
 
-default_grouped_data = [
-    {
-        'name': 'Num',
-        'key': 'num',
-        'postfix': None,
-        'format': '{:1.0f}'
-    },
-    {
-        'name': 'Money',
-        'key': 'money',
-        'postfix': u"\u20AC",
-        'format': '{:1.2f}'
-    }
-]
-
 user_steps = {}
 
 def main():
     bot = custombot.CustomBot(config.token)
-    manager = query_manager.Manager()
+    manager = Manager()
 
     initialize()
 
@@ -72,19 +56,19 @@ def main():
     @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 1
         and user_steps[message.chat.id].get_command() == 'orders')
     def response_orders_step_1(message):
-        response_step_1(message, 'orders')
+        response_step_1(message, user_steps[message.chat.id].get_command())
 
     ## /orders step 2
     @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 2
         and user_steps[message.chat.id].get_command() == 'orders')
     def response_orders_step_2(message):
-        response_step_2(message, 'orders')
+        response_step_2(message, user_steps[message.chat.id].get_command())
 
     ## /orders step 3
     @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 3
         and user_steps[message.chat.id].get_command() == 'orders')
     def response_orders_step_3(message):
-        response_step_3(message, 'orders')
+        response_step_3(message, user_steps[message.chat.id].get_command())
 
     ## /purchases
     @bot.message_handler(commands=['purchases', 'p'])
@@ -95,19 +79,42 @@ def main():
     @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 1
         and user_steps[message.chat.id].get_command() == 'purchases')
     def response_purchases_step_1(message):
-        response_step_1(message, 'purchases')
+        response_step_1(message, user_steps[message.chat.id].get_command())
 
     ## /purchases step 2
     @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 2
         and user_steps[message.chat.id].get_command() == 'purchases')
     def response_purchases_step_2(message):
-        response_step_2(message, 'purchases')
+        response_step_2(message, user_steps[message.chat.id].get_command())
 
     ## /purchases step 3
     @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 3
         and user_steps[message.chat.id].get_command() == 'purchases')
     def response_purchases_step_3(message):
-        response_step_3(message, 'purchases')
+        response_step_3(message, user_steps[message.chat.id].get_command())
+
+    ## /items_sold
+    @bot.message_handler(commands=['items_sold', 'is'])
+    def response_items_sold(message):
+        response_step_0(message, 'items_sold')
+
+    ## /items_sold step 1
+    @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 1
+        and user_steps[message.chat.id].get_command() == 'items_sold')
+    def response_items_sold_step_1(message):
+        response_step_1(message, user_steps[message.chat.id].get_command())
+
+    ## /items_sold step 2
+    @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 2
+        and user_steps[message.chat.id].get_command() == 'items_sold')
+    def response_items_sold_step_2(message):
+        response_step_2(message, user_steps[message.chat.id].get_command())
+
+    ## /items_sold step 3
+    @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 3
+        and user_steps[message.chat.id].get_command() == 'items_sold')
+    def response_items_sold_step_3(message):
+        response_step_3(message, user_steps[message.chat.id].get_command())
 
     def response_step_0(message, command):
         if not check_auth(message):
@@ -169,8 +176,9 @@ def main():
                 selected_hub = user_steps[uid].get_response(1)
                 selected_date = user_steps[uid].get_response(2)
                 data = getattr(globals()['Manager'](), 'get_' + command + '_data')(hubs[selected_hub], selected_grouping, selected_date)
-                header = [hubs[selected_hub], u"\u2021", str(selected_date), u"\u2021", message.text]
-                message_text = format_message_grouped_data(data, header, default_grouped_data)
+                header = [hubs[selected_hub], u"\u2021", command, u"\u2021", str(selected_date), u"\u2021", message.text]
+                grouped_data = getattr(globals()['Manager'](), 'get_' + command + '_grouped_data_format')()
+                message_text = format_message_grouped_data(data, header, grouped_data)
                 bot.send_html_message(message.chat.id, message_text)
                 user_steps[uid].reset()
 
@@ -194,14 +202,15 @@ def response_no_access(bot, message):
 
 def print_help(bot, message):
     commands = collections.OrderedDict()
-    commands['start'] = 'Get used to the bot'
-    commands['help'] = 'Gives you information about the available commands'
-    commands['orders, /o'] = 'Get data about the correct orders in both hubs'
-    commands['purchases, /p'] = 'Get data about items bought in both hubs'
+    commands['/start'] = 'Get used to the bot'
+    commands['/help'] = 'Gives you information about the available commands'
+    commands['/orders, /o'] = 'Get data about the correct orders in both hubs'
+    commands['/purchases, /p'] = 'Get data about items bought in both hubs'
+    commands['/items_sold, /is'] = 'Get data about items sold in both hubs'
 
     help_text = "The following commands are available: \n"
     for key in commands:
-        help_text += "/" + key + " " + u"\u2192" + " "
+        help_text += key + " " + u"\u2192" + " "
         help_text += commands[key] + "\n"
     bot.send_message(message.chat.id, help_text)
 
@@ -256,13 +265,8 @@ def validate_date(text_date):
     except ValueError:
         return None
 
-def validate_grouping(manager, type, grouping):
-    available = []
-    if type == 'orders':
-        available = manager.get_orders_available_grouping()
-    if type == 'purchases':
-        available = manager.get_purchases_available_grouping()
-    
+def validate_grouping(manager, command, grouping):
+    available = getattr(globals()['Manager'](), 'get_' + command + '_available_grouping')()
     if grouping not in available:
         return None
     else:
