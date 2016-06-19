@@ -116,6 +116,42 @@ def main():
     def response_items_sold_step_3(message):
         response_step_3(message, user_steps[message.chat.id].get_command())
 
+    ## /bag_requested
+    @bot.message_handler(commands=['bag_requested', 'br'])
+    def response_items_sold(message):
+        response_step_0(message, 'bag_requested')
+
+    ## /bag_requested step 1
+    @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 1
+        and user_steps[message.chat.id].get_command() == 'bag_requested')
+    def response_bag_requested_step_1(message):
+        response_step_1(message, user_steps[message.chat.id].get_command())
+
+    ## /bag_requested step 2
+    @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 2
+        and user_steps[message.chat.id].get_command() == 'bag_requested')
+    def response_bag_requested_step_2(message):
+        if not check_auth(message):
+            response_no_access(bot, message);
+            return
+        else:
+            selected_date = validate_date(message.text)
+
+            if not selected_date:
+                bot.send_html_message(message.chat.id, 'Wrong date, correct format: YYYY-MM-DD')
+            else:
+                uid = message.chat.id
+                markup = bot.hide_markup()
+                bot.send_message(uid, selected_date, reply_markup=markup)
+
+                selected_hub = user_steps[uid].get_response(1)
+                data = manager.get_bag_requested_data(hubs[selected_hub], selected_date)
+                header = [hubs[selected_hub], u"\u2021", 'bag_requested', u"\u2021", str(selected_date)]
+                grouped_data = manager.get_bag_request_grouped_data_format()
+                message_text = format_message_grouped_data(data, header, grouped_data)
+                bot.send_html_message(message.chat.id, message_text)
+                user_steps[uid].reset()
+
     def response_step_0(message, command):
         if not check_auth(message):
             response_no_access(bot, message);
@@ -207,6 +243,7 @@ def print_help(bot, message):
     commands['/orders, /o'] = 'Get data about the correct orders in both hubs'
     commands['/purchases, /p'] = 'Get data about items bought in both hubs'
     commands['/items_sold, /is'] = 'Get data about items sold in both hubs'
+    commands['/bag_requested, /br'] = 'Get data about the bag requested in both hubs'
 
     help_text = "The following commands are available: \n"
     for key in commands:

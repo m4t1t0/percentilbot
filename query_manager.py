@@ -53,6 +53,15 @@ class Manager():
 
         return grouping
 
+    def get_bag_requested_data(self, hub, date_text):
+        result = {}
+        time_start = str(date_text) + ' 00:00:00'
+        time_end = str(date_text) + ' 23:59:59'
+        sql = self.sql_bag_requested_by_site()
+        data = hub['db'].run_query(sql.format(time_start, time_end))
+
+        return self.totalize(data, ['num'])
+
     def _get_default_grouped_data_format(self):
         return [
             {
@@ -94,6 +103,16 @@ class Manager():
                 'key': 'sell_price',
                 'postfix': u"\u20AC",
                 'format': '{:1.2f}'
+            }
+        ]
+
+    def get_bag_request_grouped_data_format(self):
+        return [
+            {
+                'name': 'Num',
+                'key': 'num',
+                'postfix': None,
+                'format': '{:1.0f}'
             }
         ]
 
@@ -217,6 +236,20 @@ class Manager():
             WHERE o.date_add >= '{}'
             AND o.date_add <= '{}'
             AND po.id_order_state IN ({})
+            GROUP BY cei.id_site
+            ORDER BY cei.id_site ASC
+            """
+
+    def sql_bag_requested_by_site(self):
+        return """
+            SELECT w.shortName AS grouping_type, 
+            COUNT(*) AS num
+            FROM bag_request br
+            INNER JOIN ps_customer c ON c.id_customer = br.id_customer
+            INNER JOIN customer_extra_info cei ON c.id_customer = cei.id_customer
+            INNER JOIN Websites w ON w.id_website = cei.id_site
+            WHERE br.request_date >= '{}'
+            AND br.request_date <= '{}'
             GROUP BY cei.id_site
             ORDER BY cei.id_site ASC
             """
