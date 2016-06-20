@@ -14,7 +14,7 @@ class Db():
         self._db = MySQLdb.connect(host=self.host, port=self.port, user=self.user, 
             passwd=self.passwd, db=self.dbname, cursorclass=MySQLdb.cursors.DictCursor)
 
-    def close():
+    def close(self):
         self._db.MySQLdb.close()
 
     def run_query(self, sql):
