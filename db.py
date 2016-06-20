@@ -15,7 +15,7 @@ class Db():
             passwd=self.passwd, db=self.dbname, cursorclass=MySQLdb.cursors.DictCursor)
 
     def close(self):
-        self._db.MySQLdb.close()
+        self._db.close()
 
     def run_query(self, sql):
         try:
