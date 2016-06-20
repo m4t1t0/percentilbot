@@ -116,21 +116,21 @@ def main():
     def response_items_sold_step_3(message):
         response_step_3(message, user_steps[message.chat.id].get_command())
 
-    ## /bag_requested
-    @bot.message_handler(commands=['bag_requested', 'br'])
+    ## /bags_requested
+    @bot.message_handler(commands=['bags_requested', 'br'])
     def response_items_sold(message):
-        response_step_0(message, 'bag_requested')
+        response_step_0(message, 'bags_requested')
 
-    ## /bag_requested step 1
+    ## /bags_requested step 1
     @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 1
-        and user_steps[message.chat.id].get_command() == 'bag_requested')
-    def response_bag_requested_step_1(message):
+        and user_steps[message.chat.id].get_command() == 'bags_requested')
+    def response_bags_requested_step_1(message):
         response_step_1(message, user_steps[message.chat.id].get_command())
 
-    ## /bag_requested step 2
+    ## /bags_requested step 2
     @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 2
-        and user_steps[message.chat.id].get_command() == 'bag_requested')
-    def response_bag_requested_step_2(message):
+        and user_steps[message.chat.id].get_command() == 'bags_requested')
+    def response_bags_requested_step_2(message):
         if not check_auth(message):
             response_no_access(bot, message);
             return
@@ -145,8 +145,44 @@ def main():
                 bot.send_message(uid, selected_date, reply_markup=markup)
 
                 selected_hub = user_steps[uid].get_response(1)
-                data = manager.get_bag_requested_data(hubs[selected_hub], selected_date)
-                header = [hubs[selected_hub], u"\u2021", 'bag_requested', u"\u2021", str(selected_date)]
+                data = manager.get_bags_requested_data(hubs[selected_hub], selected_date)
+                header = [hubs[selected_hub], u"\u2021", 'bags_requested', u"\u2021", str(selected_date)]
+                grouped_data = manager.get_bag_request_grouped_data_format()
+                message_text = format_message_grouped_data(data, header, grouped_data)
+                bot.send_html_message(message.chat.id, message_text)
+                user_steps[uid].reset()
+
+    ## /bags_in
+    @bot.message_handler(commands=['bags_in', 'bi'])
+    def response_items_sold(message):
+        response_step_0(message, 'bags_in')
+
+    ## /bags_in step 1
+    @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 1
+        and user_steps[message.chat.id].get_command() == 'bags_in')
+    def response_bags_in_step_1(message):
+        response_step_1(message, user_steps[message.chat.id].get_command())
+
+    ## /bags_in step 2
+    @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 2
+        and user_steps[message.chat.id].get_command() == 'bags_in')
+    def response_bags_in_step_2(message):
+        if not check_auth(message):
+            response_no_access(bot, message);
+            return
+        else:
+            selected_date = validate_date(message.text)
+
+            if not selected_date:
+                bot.send_html_message(message.chat.id, 'Wrong date, correct format: YYYY-MM-DD')
+            else:
+                uid = message.chat.id
+                markup = bot.hide_markup()
+                bot.send_message(uid, selected_date, reply_markup=markup)
+
+                selected_hub = user_steps[uid].get_response(1)
+                data = manager.get_bags_in_data(hubs[selected_hub], selected_date)
+                header = [hubs[selected_hub], u"\u2021", 'bags_in', u"\u2021", str(selected_date)]
                 grouped_data = manager.get_bag_request_grouped_data_format()
                 message_text = format_message_grouped_data(data, header, grouped_data)
                 bot.send_html_message(message.chat.id, message_text)
@@ -243,7 +279,8 @@ def print_help(bot, message):
     commands['/orders, /o'] = 'Get data about the correct orders in both hubs'
     commands['/purchases, /p'] = 'Get data about items bought in both hubs'
     commands['/items_sold, /is'] = 'Get data about items sold in both hubs'
-    commands['/bag_requested, /br'] = 'Get data about the bag requested in both hubs'
+    commands['/bags_requested, /br'] = 'Get data about the bags requested in both hubs'
+    commands['/bags_in, /bi'] = 'Get data about the bags in in both hubs'
 
     help_text = "The following commands are available: \n"
     for key in commands:
@@ -311,5 +348,5 @@ def validate_grouping(manager, command, grouping):
 
 main()
 
-#daemon = Daemonize(app="percentil_telegram", pid=pid, action=main)
-#daemon.start()
+daemon = Daemonize(app="percentil_telegram", pid=pid, action=main)
+daemon.start()
