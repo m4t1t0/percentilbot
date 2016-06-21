@@ -16,9 +16,9 @@ import step_manager
 pid = "/tmp/percentil_telegram.pid"
 
 hubs = collections.OrderedDict()
-hubs['madrid'] = {'name': 'Madrid', 'db': db.Db(host=config.mad_db_host, user=config.mad_db_user, 
+hubs['madrid'] = {'name': 'Madrid', 'db': db.Db(host=config.mad_db_host, user=config.mad_db_user,
     passwd=config.mad_db_pass, dbname=config.mad_db_name)}
-hubs['berlin'] = {'name': 'Berlín', 'db': db.Db(host=config.ber_db_host, user=config.ber_db_user, 
+hubs['berlin'] = {'name': 'Berlín', 'db': db.Db(host=config.ber_db_host, user=config.ber_db_user,
     passwd=config.ber_db_pass, dbname=config.ber_db_name)}
 
 user_steps = {}
@@ -268,7 +268,7 @@ def initialize():
 
 def check_auth(message):
     return message.from_user.id in config.auth_users
-        
+
 def response_no_access(bot, message):
     bot.send_message(message.chat.id, "Access denied! try to contact tech manager with id: {}".format(message.from_user.id))
 
@@ -314,7 +314,7 @@ def format_message_grouped_data(data, header, grouped_data):
                     gd['name'],
                     format_result(data['total'][gd['key']], gd['postfix'], gd['format'])
                 )
-    
+
     return message_text
 
 def format_result(value, postfix=None, _format='{:1.0f}'):
@@ -346,7 +346,6 @@ def validate_grouping(manager, command, grouping):
     else:
         return available[grouping]
 
-main()
-
 daemon = Daemonize(app="percentil_telegram", pid=pid, action=main)
 daemon.start()
+
