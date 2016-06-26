@@ -33,5 +33,6 @@ class Db():
             self.close()
             return data
         except Exception as e:
+            print(e)
             self.close()
             return None
