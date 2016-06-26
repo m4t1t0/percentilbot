@@ -71,6 +71,16 @@ class Manager():
 
         return self.totalize(data, ['num'])
 
+    def get_missing_items_data(self, hub, date_text):
+        result = {}
+        time_start = str(date_text) + ' 00:00:00'
+        time_end = str(date_text) + ' 23:59:59'
+        sql = self.sql_missing_items()
+        backoffice_db = hub['db'].get_dbboname()
+        data = hub['db'].run_query(sql.format(backoffice_db, backoffice_db, time_start, time_end))
+
+        return data
+
     def _get_default_grouped_data_format(self):
         return [
             {
@@ -276,4 +286,14 @@ class Manager():
             AND b.receivedOn <= '{}'
             GROUP BY cei.id_site
             ORDER BY cei.id_site ASC
+            """
+
+    def sql_missing_items(self):
+        return """
+            SELECT SUM(IF(plc.status = 'none', 1, 0)) AS 'hold',
+            SUM(IF(plc.status = 'missing', 1, 0)) AS 'missing'
+            FROM {}.PickingList pl
+            INNER JOIN {}.PickingListContents plc ON pl.id_pickingList = plc.id_pickingList
+            WHERE pl.creationDate >= '{}'
+            AND pl.creationDate <= '{}'
             """

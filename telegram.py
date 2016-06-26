@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-from daemonize import Daemonize
-import emoji
 import config
 import custombot
 from telebot import types
@@ -13,13 +11,11 @@ import collections
 from query_manager import Manager
 import step_manager
 
-pid = "/tmp/percentil_telegram.pid"
-
 hubs = collections.OrderedDict()
 hubs['madrid'] = {'name': 'Madrid', 'db': db.Db(host=config.mad_db_host, user=config.mad_db_user,
-    passwd=config.mad_db_pass, dbname=config.mad_db_name)}
+    passwd=config.mad_db_pass, dbname=config.mad_db_name, dbboname=config.mad_bo_db_name)}
 hubs['berlin'] = {'name': 'Berlín', 'db': db.Db(host=config.ber_db_host, user=config.ber_db_user,
-    passwd=config.ber_db_pass, dbname=config.ber_db_name)}
+    passwd=config.ber_db_pass, dbname=config.ber_db_name, dbboname=config.ber_bo_db_name)}
 
 user_steps = {}
 
@@ -118,7 +114,7 @@ def main():
 
     ## /bags_requested
     @bot.message_handler(commands=['bags_requested', 'br'])
-    def response_items_sold(message):
+    def response_bag_requested(message):
         response_step_0(message, 'bags_requested')
 
     ## /bags_requested step 1
@@ -154,7 +150,7 @@ def main():
 
     ## /bags_in
     @bot.message_handler(commands=['bags_in', 'bi'])
-    def response_items_sold(message):
+    def response_bags_in(message):
         response_step_0(message, 'bags_in')
 
     ## /bags_in step 1
@@ -185,6 +181,41 @@ def main():
                 header = [hubs[selected_hub], u"\u2021", 'bags_in', u"\u2021", str(selected_date)]
                 grouped_data = manager.get_bag_request_grouped_data_format()
                 message_text = format_message_grouped_data(data, header, grouped_data)
+                bot.send_html_message(message.chat.id, message_text)
+                user_steps[uid].reset()
+
+    ## /missing_items
+    @bot.message_handler(commands=['missing_items', 'mi'])
+    def response_missing_items(message):
+        response_step_0(message, 'missing_items')
+
+    ## /missing_items step 1
+    @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 1
+        and user_steps[message.chat.id].get_command() == 'missing_items')
+    def response_missing_items_step_1(message):
+        response_step_1(message, user_steps[message.chat.id].get_command())
+
+    ## /missing_items step 2
+    @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 2
+        and user_steps[message.chat.id].get_command() == 'missing_items')
+    def response_missing_items_step_2(message):
+        if not check_auth(message):
+            response_no_access(bot, message);
+            return
+        else:
+            selected_date = validate_date(message.text)
+
+            if not selected_date:
+                bot.send_html_message(message.chat.id, 'Wrong date, correct format: YYYY-MM-DD')
+            else:
+                uid = message.chat.id
+                markup = bot.hide_markup()
+                bot.send_message(uid, selected_date, reply_markup=markup)
+
+                selected_hub = user_steps[uid].get_response(1)
+                data = manager.get_missing_items_data(hubs[selected_hub], selected_date)
+                header = [hubs[selected_hub], u"\u2021", 'missing_items', u"\u2021", str(selected_date)]
+                message_text = format_message_simple_data(data, header, ['hold', 'missing'])
                 bot.send_html_message(message.chat.id, message_text)
                 user_steps[uid].reset()
 
@@ -273,6 +304,16 @@ def response_no_access(bot, message):
     bot.send_message(message.chat.id, "Access denied! try to contact tech manager with id: {}".format(message.from_user.id))
 
 def print_help(bot, message):
+    # Commands to send to botfather
+    # start - Get used to the bot
+    # help - Gives you information about the available commands
+    # orders - Get data about the correct orders in both hubs
+    # purchases - Get data about items bought in both hubs
+    # items_sold - Get data about items sold in both hubs
+    # bags_requested - Get data about the bags requested in both hubs
+    # bags_in - Get data about the bags in in both hubs
+    # missing_items - Get information about hold items and picking misses
+
     commands = collections.OrderedDict()
     commands['/start'] = 'Get used to the bot'
     commands['/help'] = 'Gives you information about the available commands'
@@ -281,12 +322,30 @@ def print_help(bot, message):
     commands['/items_sold, /is'] = 'Get data about items sold in both hubs'
     commands['/bags_requested, /br'] = 'Get data about the bags requested in both hubs'
     commands['/bags_in, /bi'] = 'Get data about the bags in in both hubs'
+    commands['/missing_items, /mi'] = 'Get information about hold items and picking misses'
 
     help_text = "The following commands are available: \n"
     for key in commands:
         help_text += key + " " + u"\u2192" + " "
         help_text += commands[key] + "\n"
     bot.send_message(message.chat.id, help_text)
+
+def format_message_simple_data(data, header, keys):
+    message_text = ''
+    message_text += '\n\n<b>{}</b>'.format(header[0]['name'].upper())
+    header.pop(0)
+    for head in header:
+        message_text += ' <i>{}</i>'.format(head)
+
+    for dt in data:
+        for key in keys:
+            message_text += "\n\t\t" + u"\u2192 {}: ".format(key)
+            if dt[key] is None:
+                message_text += '-'
+            else:
+                message_text += str(dt[key])
+
+    return message_text
 
 def format_message_grouped_data(data, header, grouped_data):
     message_text = ''
@@ -296,7 +355,7 @@ def format_message_grouped_data(data, header, grouped_data):
         message_text += ' <i>{}</i>'.format(head)
 
     for gd in grouped_data:
-        message_text += "\n\t\t" + u"\u2192".format(gd['name'])
+        message_text += "\n\t\t" + u"\u2192"
         if data['data'] is None:
             message_text += ' -'
         else:
@@ -346,6 +405,4 @@ def validate_grouping(manager, command, grouping):
     else:
         return available[grouping]
 
-daemon = Daemonize(app="percentil_telegram", pid=pid, action=main)
-daemon.start()
-
+main()
