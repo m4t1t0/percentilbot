@@ -44,87 +44,87 @@ def main():
             print_help(bot, message)
 
     ## /orders
-    @bot.message_handler(commands=['orders', 'o'])
+    @bot.message_handler(commands=['orders'])
     def response_orders(message):
         response_step_0(message, 'orders')
 
     ## /orders step 1
-    @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 1
+    @bot.message_handler(func=lambda value: user_steps[message.chat.id].get_step() == 1
         and user_steps[message.chat.id].get_command() == 'orders')
     def response_orders_step_1(message):
         response_step_1(message, user_steps[message.chat.id].get_command())
 
     ## /orders step 2
-    @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 2
+    @bot.message_handler(func=lambda value: user_steps[message.chat.id].get_step() == 2
         and user_steps[message.chat.id].get_command() == 'orders')
     def response_orders_step_2(message):
         response_step_2(message, user_steps[message.chat.id].get_command())
 
     ## /orders step 3
-    @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 3
+    @bot.message_handler(func=lambda value: user_steps[message.chat.id].get_step() == 3
         and user_steps[message.chat.id].get_command() == 'orders')
     def response_orders_step_3(message):
         response_step_3(message, user_steps[message.chat.id].get_command())
 
     ## /purchases
-    @bot.message_handler(commands=['purchases', 'p'])
+    @bot.message_handler(commands=['purchases'])
     def response_purchases(message):
         response_step_0(message, 'purchases')
 
     ## /purchases step 1
-    @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 1
+    @bot.message_handler(func=lambda value: user_steps[message.chat.id].get_step() == 1
         and user_steps[message.chat.id].get_command() == 'purchases')
     def response_purchases_step_1(message):
         response_step_1(message, user_steps[message.chat.id].get_command())
 
     ## /purchases step 2
-    @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 2
+    @bot.message_handler(func=lambda value: user_steps[message.chat.id].get_step() == 2
         and user_steps[message.chat.id].get_command() == 'purchases')
     def response_purchases_step_2(message):
         response_step_2(message, user_steps[message.chat.id].get_command())
 
     ## /purchases step 3
-    @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 3
+    @bot.message_handler(func=lambda value: user_steps[message.chat.id].get_step() == 3
         and user_steps[message.chat.id].get_command() == 'purchases')
     def response_purchases_step_3(message):
         response_step_3(message, user_steps[message.chat.id].get_command())
 
     ## /items_sold
-    @bot.message_handler(commands=['items_sold', 'is'])
+    @bot.message_handler(commands=['items_sold'])
     def response_items_sold(message):
         response_step_0(message, 'items_sold')
 
     ## /items_sold step 1
-    @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 1
+    @bot.message_handler(func=lambda value: user_steps[message.chat.id].get_step() == 1
         and user_steps[message.chat.id].get_command() == 'items_sold')
     def response_items_sold_step_1(message):
         response_step_1(message, user_steps[message.chat.id].get_command())
 
     ## /items_sold step 2
-    @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 2
+    @bot.message_handler(func=lambda value: user_steps[message.chat.id].get_step() == 2
         and user_steps[message.chat.id].get_command() == 'items_sold')
     def response_items_sold_step_2(message):
         response_step_2(message, user_steps[message.chat.id].get_command())
 
     ## /items_sold step 3
-    @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 3
+    @bot.message_handler(func=lambda value: user_steps[message.chat.id].get_step() == 3
         and user_steps[message.chat.id].get_command() == 'items_sold')
     def response_items_sold_step_3(message):
         response_step_3(message, user_steps[message.chat.id].get_command())
 
     ## /bags_requested
-    @bot.message_handler(commands=['bags_requested', 'br'])
+    @bot.message_handler(commands=['bags_requested'])
     def response_bag_requested(message):
         response_step_0(message, 'bags_requested')
 
     ## /bags_requested step 1
-    @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 1
+    @bot.message_handler(func=lambda value: user_steps[message.chat.id].get_step() == 1
         and user_steps[message.chat.id].get_command() == 'bags_requested')
     def response_bags_requested_step_1(message):
         response_step_1(message, user_steps[message.chat.id].get_command())
 
     ## /bags_requested step 2
-    @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 2
+    @bot.message_handler(func=lambda value: user_steps[message.chat.id].get_step() == 2
         and user_steps[message.chat.id].get_command() == 'bags_requested')
     def response_bags_requested_step_2(message):
         if not check_auth(message):
@@ -149,18 +149,18 @@ def main():
                 user_steps[uid].reset()
 
     ## /bags_in
-    @bot.message_handler(commands=['bags_in', 'bi'])
+    @bot.message_handler(commands=['bags_in'])
     def response_bags_in(message):
         response_step_0(message, 'bags_in')
 
     ## /bags_in step 1
-    @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 1
+    @bot.message_handler(func=lambda value: user_steps[message.chat.id].get_step() == 1
         and user_steps[message.chat.id].get_command() == 'bags_in')
     def response_bags_in_step_1(message):
         response_step_1(message, user_steps[message.chat.id].get_command())
 
     ## /bags_in step 2
-    @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 2
+    @bot.message_handler(func=lambda value: user_steps[message.chat.id].get_step() == 2
         and user_steps[message.chat.id].get_command() == 'bags_in')
     def response_bags_in_step_2(message):
         if not check_auth(message):
@@ -185,18 +185,18 @@ def main():
                 user_steps[uid].reset()
 
     ## /missing_items
-    @bot.message_handler(commands=['missing_items', 'mi'])
+    @bot.message_handler(commands=['missing_items'])
     def response_missing_items(message):
         response_step_0(message, 'missing_items')
 
     ## /missing_items step 1
-    @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 1
+    @bot.message_handler(func=lambda value: user_steps[message.chat.id].get_step() == 1
         and user_steps[message.chat.id].get_command() == 'missing_items')
     def response_missing_items_step_1(message):
         response_step_1(message, user_steps[message.chat.id].get_command())
 
     ## /missing_items step 2
-    @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 2
+    @bot.message_handler(func=lambda value: user_steps[message.chat.id].get_step() == 2
         and user_steps[message.chat.id].get_command() == 'missing_items')
     def response_missing_items_step_2(message):
         if not check_auth(message):
@@ -286,9 +286,20 @@ def main():
                 user_steps[uid].reset()
 
     ## default handler for every other text
-    @bot.message_handler(func=lambda message: True, content_types=['text'])
-    def command_default(m):
-        bot.reply_to(m, "I don't understand what you say. Maybe try the /help command")
+    @bot.message_handler(func=lambda value: True, content_types=['text'])
+    def command_default(message):
+        bot.reply_to(message, "I don't understand what you say. Maybe try the /help command")
+
+    ## Notification handler based on severity
+    @bot.notification_handler(severity=['error'])
+    def notification_error(notification):
+        print('In error')
+        bot.send_html_message(11415733, notification['text'])
+
+    @bot.notification_handler(func=lambda value: True)
+    def notification_default(notification):
+        print('In default')
+        bot.send_html_message(11415733, notification['text'])
 
     bot.polling()
 
@@ -317,12 +328,12 @@ def print_help(bot, message):
     commands = collections.OrderedDict()
     commands['/start'] = 'Get used to the bot'
     commands['/help'] = 'Gives you information about the available commands'
-    commands['/orders, /o'] = 'Get data about the correct orders in both hubs'
-    commands['/purchases, /p'] = 'Get data about items bought in both hubs'
-    commands['/items_sold, /is'] = 'Get data about items sold in both hubs'
-    commands['/bags_requested, /br'] = 'Get data about the bags requested in both hubs'
-    commands['/bags_in, /bi'] = 'Get data about the bags in in both hubs'
-    commands['/missing_items, /mi'] = 'Get information about hold items and picking misses'
+    commands['/orders'] = 'Get data about the correct orders in both hubs'
+    commands['/purchases'] = 'Get data about items bought in both hubs'
+    commands['/items_sold'] = 'Get data about items sold in both hubs'
+    commands['/bags_requested'] = 'Get data about the bags requested in both hubs'
+    commands['/bags_in'] = 'Get data about the bags in in both hubs'
+    commands['/missing_items'] = 'Get information about hold items and picking misses'
 
     help_text = "The following commands are available: \n"
     for key in commands:
