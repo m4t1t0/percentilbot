@@ -308,7 +308,7 @@ def print_help(bot, message):
     # start - Get used to the bot
     # help - Gives you information about the available commands
     # orders - Get data about the correct orders in both hubs
-    # purchases - Get data about items bought in both hubs
+    # purchases - Get data about items processed in both hubs
     # items_sold - Get data about items sold in both hubs
     # bags_requested - Get data about the bags requested in both hubs
     # bags_in - Get data about the bags in in both hubs
@@ -318,7 +318,7 @@ def print_help(bot, message):
     commands['/start'] = 'Get used to the bot'
     commands['/help'] = 'Gives you information about the available commands'
     commands['/orders, /o'] = 'Get data about the correct orders in both hubs'
-    commands['/purchases, /p'] = 'Get data about items bought in both hubs'
+    commands['/purchases, /p'] = 'Get data about items processed in both hubs'
     commands['/items_sold, /is'] = 'Get data about items sold in both hubs'
     commands['/bags_requested, /br'] = 'Get data about the bags requested in both hubs'
     commands['/bags_in, /bi'] = 'Get data about the bags in in both hubs'
