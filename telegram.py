@@ -14,7 +14,7 @@ import step_manager
 hubs = collections.OrderedDict()
 hubs['madrid'] = {'name': 'Madrid', 'db': db.Db(host=config.mad_db_host, user=config.mad_db_user,
     passwd=config.mad_db_pass, dbname=config.mad_db_name, dbboname=config.mad_bo_db_name)}
-hubs['berlin'] = {'name': 'Berlín', 'db': db.Db(host=config.ber_db_host, user=config.ber_db_user,
+hubs['berlin'] = {'name': 'Berlin', 'db': db.Db(host=config.ber_db_host, user=config.ber_db_user,
     passwd=config.ber_db_pass, dbname=config.ber_db_name, dbboname=config.ber_bo_db_name)}
 
 user_steps = {}
