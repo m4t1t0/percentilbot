@@ -1,5 +1,6 @@
 import config
 import redis
+import json
 import telebot
 from telebot import types
 
@@ -83,14 +84,16 @@ class CustomBot(telebot.TeleBot):
         self.notification_handlers.append(handler_dict)
 
     def get_notifications(self, timeout=20):
-        notification = {}
-
         if not self.__redis_cliented:
             self.create_redis_client()
             self.__redis_cliented = True
 
         while self.redis_client.llen(config.redis_queue) > 0:
-            notification_text = self.redis_client.lpop(config.redis_queue)
-            notification['severity'] = 'warning'
-            notification['text'] = notification_text
+            notification = json.loads(self.redis_client.lpop(config.redis_queue))
+            if ('severity' not in notification):
+                notification['severity'] = 'message'
+
+            if ('role' not in notification):
+                notification['role'] = 'admin'
+
             self._notify_notification_handlers(self.notification_handlers, notification)

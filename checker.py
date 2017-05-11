@@ -11,11 +11,11 @@ def main():
     if response['ok'] == True:
         if response['result']:
             restart_server()
-    else:        
+    else:
         restart_server()
 
 def restart_server():
-    os.system('pkill -f telegram')
-    os.system('python3 telegram.py &')
+    os.system('/usr/bin/pkill -f telegram')
+    os.system('/usr/bin/python3 /home/percentil/percentilbot/telegram.py &')
 
 main()

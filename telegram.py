@@ -234,16 +234,14 @@ def main():
     ## Notification handler based on severity
     @bot.notification_handler(severity=['error'])
     def notification_error(notification):
-        ## Hacer esto con map/reduce
         for auth in config.auth_users:
             if ('admin' in auth['roles']):
                 bot.send_html_message(auth['uid'], notification['text'])
 
     @bot.notification_handler(func=lambda notification: True)
     def notification_default(notification):
-        ## Hacer esto con map/reduce
         for auth in config.auth_users:
-            if ('admin' in auth['roles']):
+            if (notification['role'] in auth['roles']):
                 bot.send_html_message(auth['uid'], notification['text'])
 
     bot.polling()
