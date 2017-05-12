@@ -1,6 +1,7 @@
 import config
 import redis
 import json
+import codecs
 import telebot
 from telebot import types
 
@@ -89,7 +90,8 @@ class CustomBot(telebot.TeleBot):
             self.__redis_cliented = True
 
         while self.redis_client.llen(config.redis_queue) > 0:
-            notification = json.loads(self.redis_client.lpop(config.redis_queue))
+            reader = codecs.getreader("utf-8")
+            notification = json.loads(reader(self.redis_client.lpop(config.redis_queue)))
             if ('severity' not in notification):
                 notification['severity'] = 'message'
 
