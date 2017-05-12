@@ -89,7 +89,7 @@ class CustomBot(telebot.TeleBot):
             self.__redis_cliented = True
 
         while self.redis_client.llen(config.redis_queue) > 0:
-            data = str.encode(self.redis_client.lpop(config.redis_queue))
+            data = self.redis_client.lpop(config.redis_queue)
             decoded_data = data.decode('utf-8')
             notification = json.loads(decoded_data)
             if ('severity' not in notification):
