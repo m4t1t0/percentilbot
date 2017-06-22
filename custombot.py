@@ -27,7 +27,7 @@ class CustomBot(telebot.TeleBot):
         return markup
 
     def hide_markup(self):
-        markup = types.ReplyKeyboardHide(selective=False)
+        markup = types.ReplyKeyboardRemove(selective=False)
 
         return markup
 

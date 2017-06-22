@@ -176,6 +176,35 @@ def main():
                 bot.send_html_message(message.chat.id, message_text)
                 user_steps[uid].reset()
 
+    ## /new_shoppers step 1
+    @bot.message_handler(commands=['new_shoppers'])
+    def response_new_shoppers_step_1(message):
+        response_step_1(message, 'new_shoppers')
+
+    ## /new_shoppers step 2
+    @bot.message_handler(func=lambda message: user_steps[message.chat.id].get_step() == 2
+        and user_steps[message.chat.id].get_command() == 'new_shoppers')
+    def response_new_shoppers_step_2(message):
+        if not check_auth(message):
+            response_no_access(bot, message);
+            return
+        else:
+            selected_date = validate_date(message.text)
+
+            if not selected_date:
+                bot.send_html_message(message.chat.id, 'Wrong date, correct format: YYYY-MM-DD')
+            else:
+                uid = message.chat.id
+                markup = bot.hide_markup()
+                bot.send_message(uid, selected_date, reply_markup=markup)
+
+                data = manager.get_new_shoppers_data(mainDb, selected_date)
+                header = [u"\u2021", 'new_shoppers', u"\u2021", str(selected_date)]
+                grouped_data = manager.get_bag_request_grouped_data_format()
+                message_text = format_message_grouped_data(data, header, grouped_data)
+                bot.send_html_message(message.chat.id, message_text)
+                user_steps[uid].reset()
+
     def response_step_1(message, command):
         if not check_auth(message):
             response_no_access(bot, message);
@@ -269,6 +298,7 @@ def print_help(bot, message):
     # bags_requested - Get data about the bags requested
     # bags_in - Get data about the bags
     # missing_items - Get information about hold items and picking misses
+    # new_shoppers - Get information about new shoppers
 
     commands = collections.OrderedDict()
     commands['/start'] = 'Get used to the bot'
@@ -279,6 +309,7 @@ def print_help(bot, message):
     commands['/bags_requested'] = 'Get data about the bags requested'
     commands['/bags_in'] = 'Get data about the bags'
     commands['/missing_items'] = 'Get information about hold items and picking misses'
+    commands['/new_shoppers'] = 'Get information about new shoppers'
 
     help_text = "The following commands are available: \n"
     for key in commands:

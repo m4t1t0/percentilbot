@@ -5,7 +5,6 @@ import config
 class Manager():
 
     def get_orders_data(self, db, grouping, date_text):
-        result = {}
         time_start = str(date_text) + ' 00:00:00'
         time_end = str(date_text) + ' 23:59:59'
         sql = getattr(globals()['Manager'](), 'sql_' + grouping)()
@@ -22,7 +21,6 @@ class Manager():
         return grouping
 
     def get_purchases_data(self, db, grouping, date_text):
-        result = {}
         time_start = str(date_text) + ' 00:00:00'
         time_end = str(date_text) + ' 23:59:59'
         sql = getattr(globals()['Manager'](), 'sql_' + grouping)()
@@ -54,7 +52,6 @@ class Manager():
         return grouping
 
     def get_bags_requested_data(self, db, date_text):
-        result = {}
         time_start = str(date_text) + ' 00:00:00'
         time_end = str(date_text) + ' 23:59:59'
         sql = self.sql_bags_requested_by_site()
@@ -63,7 +60,6 @@ class Manager():
         return self.totalize(data, ['num'])
 
     def get_bags_in_data(self, db, date_text):
-        result = {}
         time_start = str(date_text) + ' 00:00:00'
         time_end = str(date_text) + ' 23:59:59'
         sql = self.sql_bags_in_by_site()
@@ -72,13 +68,20 @@ class Manager():
         return self.totalize(data, ['num'])
 
     def get_missing_items_data(self, db, date_text):
-        result = {}
         time_start = str(date_text) + ' 00:00:00'
         time_end = str(date_text) + ' 23:59:59'
         sql = self.sql_missing_items()
         data = db.run_query(sql.format(time_start, time_end))
 
         return data
+
+    def get_new_shoppers_data(self, db, date_text):
+        time_start = str(date_text) + ' 00:00:00'
+        time_end = str(date_text) + ' 23:59:59'
+        sql = self.sql_new_shoppers_by_site()
+        data = db.run_query(sql.format(config.new_shopper_order_states, time_start, time_end))
+
+        return self.totalize(data, ['num'])
 
     def _get_default_grouped_data_format(self):
         return [
@@ -151,8 +154,7 @@ class Manager():
 
     def sql_orders_by_clothes_subtype(self):
         return """
-            SELECT po.clothes_subtype AS grouping_type, 
-            COUNT(*) AS num, sum(total_paid_real) as money
+            SELECT po.clothes_subtype AS grouping_type, COUNT(*) AS num, sum(total_paid_real) as money
             FROM ps_orders o
             INNER JOIN PercentilOrder po ON o.id_order = po.id_order
             WHERE o.date_add >= '{}'
@@ -164,8 +166,7 @@ class Manager():
 
     def sql_orders_by_site(self):
         return """
-            SELECT w.shortName AS grouping_type, 
-            COUNT(*) AS num, sum(total_paid_real) as money
+            SELECT w.shortName AS grouping_type, COUNT(*) AS num, sum(total_paid_real) as money
             FROM ps_orders o
             INNER JOIN PercentilOrder po ON o.id_order = po.id_order
             INNER JOIN ps_customer c ON c.id_customer = o.id_customer
@@ -206,8 +207,7 @@ class Manager():
 
     def sql_purchases_by_site(self):
         return """
-            SELECT w.shortName AS grouping_type,
-            COUNT(*) AS num, SUM(pp.fiscal_price) AS money
+            SELECT w.shortName AS grouping_type, COUNT(*) AS num, SUM(pp.fiscal_price) AS money
             FROM PercentilProduct pp
             INNER JOIN bag b ON pp.id_bag = b.id_bag
             INNER JOIN bag_request br ON b.id_bag_request = br.id_bag_request
@@ -240,7 +240,7 @@ class Manager():
 
     def sql_items_sold_by_site(self):
         return """
-            SELECT w.shortName AS grouping_type, 
+            SELECT w.shortName AS grouping_type,
             COUNT(*) AS num, SUM(pp.fiscal_price) AS buy_price,
             SUM(od.product_price) AS sell_price 
             FROM ps_orders o
@@ -260,8 +260,7 @@ class Manager():
 
     def sql_bags_requested_by_site(self):
         return """
-            SELECT w.shortName AS grouping_type, 
-            COUNT(*) AS num
+            SELECT w.shortName AS grouping_type, COUNT(*) AS num
             FROM bag_request br
             INNER JOIN ps_customer c ON c.id_customer = br.id_customer
             INNER JOIN customer_extra_info cei ON c.id_customer = cei.id_customer
@@ -274,8 +273,7 @@ class Manager():
 
     def sql_bags_in_by_site(self):
         return """
-            SELECT w.shortName AS grouping_type, 
-            COUNT(*) AS num
+            SELECT w.shortName AS grouping_type, COUNT(*) AS num
             FROM bag b
             INNER JOIN bag_request br ON br.id_bag_request = b.id_bag_request
             INNER JOIN ps_customer c ON c.id_customer = br.id_customer
@@ -289,10 +287,30 @@ class Manager():
 
     def sql_missing_items(self):
         return """
-            SELECT SUM(IF(plc.status = 'none', 1, 0)) AS 'hold',
-            SUM(IF(plc.status = 'missing', 1, 0)) AS 'missing'
+            SELECT SUM(IF(plc.status = 'none', 1, 0)) AS 'hold', SUM(IF(plc.status = 'missing', 1, 0)) AS 'missing'
             FROM PickingList pl
             INNER JOIN PickingListContents plc ON pl.id_pickingList = plc.id_pickingList
             WHERE pl.creationDate >= '{}'
             AND pl.creationDate <= '{}'
+            """
+
+    def sql_new_shoppers_by_site(self):
+        return """
+            SELECT w.shortName AS grouping_type, SUM(IF(cn.ncompras = 1, 1, 0)) AS num
+            FROM
+            (
+                SELECT id_customer, COUNT(*) AS ncompras
+                FROM ps_orders o
+                INNER JOIN PercentilOrder po ON o.id_order = po.id_order
+                WHERE po.id_order_state IN ({})
+                GROUP BY id_customer
+            ) cn, ps_orders o
+            INNER JOIN ps_customer c ON o.id_customer=c.id_customer
+            INNER JOIN PercentilOrder po ON o.id_order=po.id_order
+            INNER JOIN customer_extra_info AS cei ON c.id_customer=cei.id_customer
+            INNER JOIN Websites w ON w.id_website = cei.id_site
+            WHERE cn.id_customer=o.id_customer
+            AND o.date_add >= '{}'
+            AND o.date_add <= '{}'
+            GROUP BY w.shortName
             """
